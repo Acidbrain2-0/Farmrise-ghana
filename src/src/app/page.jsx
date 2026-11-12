@@ -122,7 +122,7 @@ export default function HomePage() {
         <div className="chips">{[50,65,70,80,100,250,500,1000].map(v => <button type="button" className={"chip "+(amount===String(v)?"active":"")} onClick={() => setAmount(String(v))} key={v}>GH₵{v}</button>)}</div>
         <div className="sectiontitle">Mobile Money Network</div><div className="networkgrid">{networks.map(n => <button type="button" className={"network "+(network===n?"active":"")} onClick={() => setNetwork(n)} key={n}>{n}</button>)}</div>
         <div className="field"><label>YOUR MOBILE MONEY NUMBER</label><input inputMode="tel" value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} placeholder="024XXXXXXX" /></div>
-        <button className="btn" style={{width:"100%"}} disabled={busy || !amount || !mobileNumber} onClick={submitDeposit}>Request payment prompt</button>
+        <button className="btn" style={{width:"100%"}} disabled={busy || !amount || !mobileNumber} onClick={submitDeposit}>Submit deposit request</button>
         <div className="sectiontitle">Recent Deposits</div>{requests.filter(r => r.type === "deposit").map(r => <div className="listrow" key={r.id}><span>{money(r.amount)}<br/><small className="muted">{r.network} · {r.mobile_number}</small></span><b>{r.status}</b></div>)}
       </>}
 
