@@ -70,7 +70,8 @@ async function adminPost(body) {
       const current = money(result.rows[0][bucket]);
       const next = body.kind === "deduct" ? current - amount : current + amount;
       if (next < 0) throw new Error("The wallet does not have enough funds.");
-      await client.query("UPDATE wallets SET " + bucket + "=$1,balance=withdrawable_balance+bonus_balance,updated_at=NOW() WHERE user_id=$2", [next, body.userId]);
+      const delta = body.kind === "deduct" ? -amount : amount;
+      await client.query("UPDATE wallets SET " + bucket + "=$1,balance=balance+$2,updated_at=NOW() WHERE user_id=$3", [next, delta, body.userId]);
       await client.query("INSERT INTO wallet_transactions(user_id,type,amount,balance_type,description,admin_note) VALUES($1,$2,$3,$4,$5,$6)", [body.userId, body.kind === "deduct" ? "admin_deduction" : "admin_credit", amount, bucket === "bonus_balance" ? "bonus" : "withdrawable", body.reason || "Admin wallet adjustment", body.reason || "Admin wallet adjustment"]);
       await client.query("COMMIT");
       return { message: "Wallet updated and transaction recorded." };
@@ -90,7 +91,7 @@ async function adminPost(body) {
       if (money(locked.rows[0].withdrawable_balance) < amount) throw new Error("The user's withdrawable balance is too low.");
       await client.query("UPDATE wallets SET withdrawable_balance=withdrawable_balance-$1,balance=balance-$1,updated_at=NOW() WHERE user_id=$2", [amount, userId]);
       const payout = await client.query("INSERT INTO admin_payouts(user_id,amount,network,mobile_number,reason,status) VALUES($1,$2,$3,$4,$5,'pending') RETURNING id", [userId, amount, network, mobileNumber, reason]);
-      await client.query("INSERT INTO wallet_transactions(user_id,type,amount,balance_type,description,admin_note,status,network,mobile_number) VALUES($1,'admin_payout_pending',$2,'withdrawable',$3,$4,'pending',$5,$6)", [userId, amount, "Admin payout reserved; awaiting actual MoMo transfer", reason, network, mobileNumber]);
+      await client.query("INSERT INTO wallet_transactions(user_id,type,amount,balance_type,description,admin_note,status,network,mobile_number,payout_id) VALUES($1,'admin_payout_pending',$2,'withdrawable',$3,$4,'pending',$5,$6,$7)", [userId, amount, "Admin payout reserved; awaiting actual MoMo transfer", reason, network, mobileNumber, payout.rows[0].id]);
       await client.query("COMMIT");
       return { message: "Payout recorded as pending. Send the MoMo payment through your authorized provider, then mark it as sent.", payoutId: payout.rows[0].id };
     } catch (error) { await client.query("ROLLBACK"); throw error; }
@@ -106,11 +107,11 @@ async function adminPost(body) {
       if (payout.status !== "pending") throw new Error("This payout has already been reviewed.");
       if (body.status === "sent") {
         await client.query("UPDATE admin_payouts SET status='sent',admin_note=$1,completed_at=NOW() WHERE id=$2", [body.note || "Transfer confirmed by admin", payout.id]);
-        await client.query("UPDATE wallet_transactions SET status='completed',type='admin_payout_sent' WHERE user_id=$1 AND type='admin_payout_pending' AND amount=$2 AND mobile_number=$3 AND status='pending'", [payout.user_id, payout.amount, payout.mobile_number]);
+        await client.query("UPDATE wallet_transactions SET status='completed',type='admin_payout_sent' WHERE payout_id=$1 AND status='pending'", [payout.id]);
       } else if (body.status === "failed" || body.status === "cancelled") {
         await client.query("UPDATE wallets SET withdrawable_balance=withdrawable_balance+$1,balance=balance+$1,updated_at=NOW() WHERE user_id=$2", [payout.amount, payout.user_id]);
         await client.query("UPDATE admin_payouts SET status=$1,admin_note=$2,completed_at=NOW() WHERE id=$3", [body.status, body.note || "Payout not completed; funds returned", payout.id]);
-        await client.query("UPDATE wallet_transactions SET status='reversed',type='admin_payout_reversed' WHERE user_id=$1 AND type='admin_payout_pending' AND amount=$2 AND mobile_number=$3 AND status='pending'", [payout.user_id, payout.amount, payout.mobile_number]);
+        await client.query("UPDATE wallet_transactions SET status='reversed',type='admin_payout_reversed' WHERE payout_id=$1 AND status='pending'", [payout.id]);
         await client.query("INSERT INTO wallet_transactions(user_id,type,amount,balance_type,description,admin_note) VALUES($1,'payout_refund',$2,'withdrawable','Refund of failed admin payout',$3)", [payout.user_id, payout.amount, body.note || "Payout failed"]);
       } else throw new Error("Choose sent, failed or cancelled.");
       await client.query("COMMIT");
