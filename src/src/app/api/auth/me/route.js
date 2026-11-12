@@ -1,0 +1,1 @@
+import {NextResponse} from "next/server";import {cookies} from "next/headers";import {readToken} from "../../../../lib/session";export async function GET(){const c=await cookies(),t=c.get("farmrise_session")?.value;return NextResponse.json({user:t?await readToken(t):null})}
