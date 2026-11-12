@@ -162,10 +162,12 @@ async function userPost(user, body) {
   const pool = db(), action = body.action, amount = money(body.amount);
   if (!Number.isFinite(amount) || amount <= 0 || amount > 10000000) throw new Error("Enter a valid amount.");
   if (action === "request_deposit") {
-    const network = String(body.network || ""), mobileNumber = String(body.mobileNumber || "").replace(/\s/g, "");
-    if (!validNetwork(network) || !/^0\d{9}$/.test(mobileNumber)) throw new Error("Choose a network and enter a valid 10-digit mobile money number.");
-    await pool.query("INSERT INTO finance_requests(user_id,type,amount,network,mobile_number,status) VALUES($1,'deposit',$2,$3,$4,'pending')", [user.id, amount, network, mobileNumber]);
-    return { message: "Deposit request saved. No money has been collected and no USSD prompt has been sent yet." };
+    const mobileNumber = String(body.mobileNumber || "").replace(/\s/g, "");
+    const reference = String(body.reference || "").trim();
+    if (!/^0\d{9}$/.test(mobileNumber)) throw new Error("Enter the 10-digit Telecel Cash number you sent the money from.");
+    if (reference.length < 4 || reference.length > 100) throw new Error("Enter the transaction ID or reference from your Telecel Cash receipt.");
+    await pool.query("INSERT INTO finance_requests(user_id,type,amount,network,mobile_number,reference,status) VALUES($1,'deposit',$2,'Telecel Cash',$3,$4,'pending')", [user.id, amount, mobileNumber, reference]);
+    return { message: "Deposit submitted for verification. Your wallet will be credited only after the payment is confirmed." };
   }
   if (action === "request_withdrawal") {
     const network = String(body.network || ""), mobileNumber = String(body.mobileNumber || "").replace(/\s/g, "");
