@@ -1,0 +1,1 @@
+{"name":"farmrise-ghana","version":"1.1.0","private":true,"scripts":{"build":"next build","dev":"next dev"},"dependencies":{"next":"15.5.9","react":"19.1.0","react-dom":"19.1.0","pg":"8.16.3","bcryptjs":"3.0.2","jose":"6.1.0"}}
