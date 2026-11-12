@@ -39,6 +39,7 @@ export async function ensureFinanceSchema() {
     "ALTER TABLE wallet_transactions ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'completed'",
     "ALTER TABLE wallet_transactions ADD COLUMN IF NOT EXISTS network TEXT",
     "ALTER TABLE wallet_transactions ADD COLUMN IF NOT EXISTS mobile_number TEXT",
+    "ALTER TABLE wallet_transactions ADD COLUMN IF NOT EXISTS payout_id BIGINT",
     "CREATE TABLE IF NOT EXISTS admin_payouts (id BIGSERIAL PRIMARY KEY, user_id BIGINT NOT NULL REFERENCES users(id), amount NUMERIC(14,2) NOT NULL, network TEXT NOT NULL, mobile_number TEXT NOT NULL, reason TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', admin_note TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), completed_at TIMESTAMPTZ)"
   ];
   for (const statement of sql) await db().query(statement);
