@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { db, ensureUsers } from "../../../../lib/db";
+import { db, ensureFinanceSchema } from "../../../../lib/db";
 import { makeToken } from "../../../../lib/session";
 
 export const runtime = "nodejs";
@@ -14,7 +14,7 @@ export async function POST(request) {
     if (fullName.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || password.length < 8) {
       return NextResponse.json({ error: "Enter your name, a valid email and a password of at least 8 characters." }, { status: 400 });
     }
-    await ensureUsers();
+    await ensureFinanceSchema();
     const passwordHash = await bcrypt.hash(password, 12);
     const client = await db().connect();
     try {
