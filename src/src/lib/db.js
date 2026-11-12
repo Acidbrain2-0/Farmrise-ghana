@@ -26,6 +26,7 @@ export async function ensureFinanceSchema() {
     "CREATE UNIQUE INDEX IF NOT EXISTS wallets_user_id_uidx ON wallets(user_id)",
     "CREATE TABLE IF NOT EXISTS investment_plans (id BIGSERIAL PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', min_amount NUMERIC(14,2) NOT NULL DEFAULT 5, duration_days INTEGER NOT NULL DEFAULT 30, return_percent NUMERIC(8,2) NOT NULL DEFAULT 0, active BOOLEAN NOT NULL DEFAULT TRUE, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())",
     "CREATE TABLE IF NOT EXISTS investments (id BIGSERIAL PRIMARY KEY, user_id BIGINT NOT NULL REFERENCES users(id), plan_id BIGINT REFERENCES investment_plans(id), plan_name TEXT NOT NULL, amount NUMERIC(14,2) NOT NULL, status TEXT NOT NULL DEFAULT 'active', created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())",
+    "ALTER TABLE investments ADD COLUMN IF NOT EXISTS plan_name TEXT",
     "CREATE TABLE IF NOT EXISTS finance_requests (id BIGSERIAL PRIMARY KEY, user_id BIGINT NOT NULL REFERENCES users(id), type TEXT NOT NULL, amount NUMERIC(14,2) NOT NULL, network TEXT, reference TEXT, mobile_number TEXT, status TEXT NOT NULL DEFAULT 'pending', admin_note TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), reviewed_at TIMESTAMPTZ)",
     "ALTER TABLE finance_requests ADD COLUMN IF NOT EXISTS network TEXT",
     "ALTER TABLE finance_requests ADD COLUMN IF NOT EXISTS reference TEXT",
