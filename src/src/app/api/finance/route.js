@@ -126,6 +126,7 @@ async function adminPost(body) {
       const found = await client.query("SELECT * FROM finance_requests WHERE id=$1 FOR UPDATE", [body.id]);
       if (!found.rowCount || found.rows[0].status !== "pending") throw new Error("Request is missing or already reviewed.");
       const req = found.rows[0];
+      if (!["approved", "rejected"].includes(body.status)) throw new Error("Choose approve or reject.");
       if (body.status === "approved") {
         if (req.type === "deposit") {
           await client.query("UPDATE wallets SET withdrawable_balance=withdrawable_balance+$1,balance=balance+$1,updated_at=NOW() WHERE user_id=$2", [req.amount, req.user_id]);
@@ -134,8 +135,8 @@ async function adminPost(body) {
           const wallet = await client.query("SELECT withdrawable_balance FROM wallets WHERE user_id=$1 FOR UPDATE", [req.user_id]);
           if (!wallet.rowCount || money(wallet.rows[0].withdrawable_balance) < money(req.amount)) throw new Error("User no longer has enough withdrawable funds.");
           await client.query("UPDATE wallets SET withdrawable_balance=withdrawable_balance-$1,balance=balance-$1,updated_at=NOW() WHERE user_id=$2", [req.amount, req.user_id]);
-          await client.query("INSERT INTO admin_payouts(user_id,amount,network,mobile_number,reason,status) VALUES($1,$2,$3,$4,$5,'pending')", [req.user_id, req.amount, req.network || "MTN MoMo", req.mobile_number || "", "Approved user withdrawal request"]);
-          await client.query("INSERT INTO wallet_transactions(user_id,type,amount,balance_type,description,admin_note,status,network,mobile_number) VALUES($1,'withdrawal_pending',$2,'withdrawable','Withdrawal approved; awaiting manual transfer',$3,'pending',$4,$5)", [req.user_id, req.amount, body.note || "Approved by admin", req.network, req.mobile_number]);
+          const payout = await client.query("INSERT INTO admin_payouts(user_id,amount,network,mobile_number,reason,status) VALUES($1,$2,$3,$4,$5,'pending') RETURNING id", [req.user_id, req.amount, req.network || "MTN MoMo", req.mobile_number || "", "Approved user withdrawal request"]);
+          await client.query("INSERT INTO wallet_transactions(user_id,type,amount,balance_type,description,admin_note,status,network,mobile_number,payout_id) VALUES($1,'withdrawal_pending',$2,'withdrawable','Withdrawal approved; awaiting manual transfer',$3,'pending',$4,$5,$6)", [req.user_id, req.amount, body.note || "Approved by admin", req.network, req.mobile_number, payout.rows[0].id]);
         }
       }
       await client.query("UPDATE finance_requests SET status=$1,admin_note=$2,reviewed_at=NOW() WHERE id=$3", [body.status, body.note || null, req.id]);
