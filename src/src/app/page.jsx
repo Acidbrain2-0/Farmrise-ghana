@@ -16,7 +16,8 @@ export default function HomePage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [amount, setAmount] = useState("");
-  const [network, setNetwork] = useState(networks[0]);
+  const [network, setNetwork] = useState("Telecel Cash");
+  const [paymentReference, setPaymentReference] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [selectedPlan, setSelectedPlan] = useState(null);
 
@@ -56,7 +57,7 @@ export default function HomePage() {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Request failed.");
-      setNotice(result.message || "Saved."); setAmount(""); setMobileNumber("");
+      setNotice(result.message || "Saved."); setAmount(""); setMobileNumber(""); setPaymentReference("");
       await refresh();
     } catch (e) { setError(e.message); }
     finally { setBusy(false); }
@@ -86,7 +87,7 @@ export default function HomePage() {
   const requests = data?.requests || [];
   const investments = data?.investments || [];
   const transactions = data?.transactions || [];
-  const submitDeposit = () => submitAction({action:"request_deposit",amount,network,mobileNumber});
+  const submitDeposit = () => submitAction({action:"request_deposit",amount,network:"Telecel Cash",mobileNumber,reference:paymentReference});
   const submitWithdrawal = () => submitAction({action:"request_withdrawal",amount,network,mobileNumber});
 
   return <div className="shell">
@@ -116,13 +117,13 @@ export default function HomePage() {
       </>}
 
       {tab === "Deposit" && <>
-        <div className="eyebrow">WALLET</div><h1 className="heading">Deposit Funds</h1><p className="muted">Choose your network, enter your MoMo number and request a payment prompt.</p>
-        <div className="notice"><b>Payment connection required</b><br/>Your deposit request will be recorded for the administrator. An automatic USSD/payment prompt is not active until FarmRise is connected to an approved Mobile Money payment provider. Never enter your MoMo PIN or OTP on this website.</div>
-        <div className="field"><label>AMOUNT (GH₵)</label><input type="number" min="1" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="Enter amount" /></div>
-        <div className="chips">{[50,65,70,80,100,250,500,1000].map(v => <button type="button" className={"chip "+(amount===String(v)?"active":"")} onClick={() => setAmount(String(v))} key={v}>GH₵{v}</button>)}</div>
-        <div className="sectiontitle">Mobile Money Network</div><div className="networkgrid">{networks.map(n => <button type="button" className={"network "+(network===n?"active":"")} onClick={() => setNetwork(n)} key={n}>{n}</button>)}</div>
-        <div className="field"><label>YOUR MOBILE MONEY NUMBER</label><input inputMode="tel" value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} placeholder="024XXXXXXX" /></div>
-        <button className="btn" style={{width:"100%"}} disabled={busy || !amount || !mobileNumber} onClick={submitDeposit}>Submit deposit request</button>
+        <div className="eyebrow">WALLET</div><h1 className="heading">Deposit Funds</h1><p className="muted">Send your deposit to the official FarmRise Telecel Cash number below.</p>
+        <div className="notice"><b>Step 1 — Send your money</b><br/>Open Telecel Cash and send the exact amount you want to deposit to:<br/><br/><b style={{fontSize:22,color:"#202124"}}>0503951664</b><br/><b>Recipient: Anita Cujoe</b><br/><br/>Make sure the recipient name matches before confirming your transfer. Never share your MoMo PIN or OTP.</div>
+        <div className="field"><label>AMOUNT YOU SENT (GH₵)</label><input type="number" min="1" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="Enter amount sent" /></div>
+        <div className="field"><label>YOUR TELECEL CASH NUMBER</label><input inputMode="tel" value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} placeholder="05XXXXXXXX" /></div>
+        <div className="field"><label>TRANSACTION ID / REFERENCE</label><input value={paymentReference} onChange={e => setPaymentReference(e.target.value)} placeholder="Enter the reference from your receipt" /></div>
+        <div className="notice"><b>Step 2 — Submit for verification</b><br/>After sending the money, enter your payment details above and submit. Your deposit will show as pending until an admin checks the receiving Telecel Cash account and approves it. Only then will the money be added to your wallet.</div>
+        <button className="btn" style={{width:"100%"}} disabled={busy || !amount || !mobileNumber || !paymentReference.trim()} onClick={submitDeposit}>I have sent the money</button>
         <div className="sectiontitle">Recent Deposits</div>{requests.filter(r => r.type === "deposit").map(r => <div className="listrow" key={r.id}><span>{money(r.amount)}<br/><small className="muted">{r.network} · {r.mobile_number}</small></span><b>{r.status}</b></div>)}
       </>}
 
