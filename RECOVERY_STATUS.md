@@ -7,7 +7,7 @@ This branch is a safe working copy. The production `main` branch and production 
 - Authentication helpers and login, logout, current-user and registration routes
 - Responsive farmer dashboard and account pages
 - Wallet, investment-plan and investment-history views
-- Deposit and withdrawal request flow for MTN MoMo, Telecel Cash and AT Money
+- Deposit and withdrawal request flow for MTN MoMo, Telecel Cash and AT Money, including a clear provider-not-connected notice and an admin reminder to verify deposits before crediting wallets
 - Separate admin dashboard for user accounts, wallet adjustments, request review and investment-plan management
 - Admin-initiated wallet payout workflow with balance locking, audit records, pending/sent/failed states and automatic refund if a payout fails
 
