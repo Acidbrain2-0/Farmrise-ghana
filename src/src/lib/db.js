@@ -44,5 +44,10 @@ export async function ensureFinanceSchema() {
     "CREATE TABLE IF NOT EXISTS admin_payouts (id BIGSERIAL PRIMARY KEY, user_id BIGINT NOT NULL REFERENCES users(id), amount NUMERIC(14,2) NOT NULL, network TEXT NOT NULL, mobile_number TEXT NOT NULL, reason TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', admin_note TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), completed_at TIMESTAMPTZ)"
   ];
   for (const statement of sql) await db().query(statement);
+  await db().query("CREATE TABLE IF NOT EXISTS app_migrations (name TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
+  const durationMigration = await db().query("INSERT INTO app_migrations(name) VALUES('investment-duration-2-to-30-days') ON CONFLICT(name) DO NOTHING RETURNING name");
+  if (durationMigration.rowCount) {
+    await db().query("UPDATE investment_plans SET duration_days=30 WHERE duration_days=2");
+  }
   await db().query("INSERT INTO wallets(user_id) SELECT id FROM users ON CONFLICT(user_id) DO NOTHING");
 }
