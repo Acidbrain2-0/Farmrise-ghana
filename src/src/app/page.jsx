@@ -156,7 +156,9 @@ function PlanCard({plan,onChoose}) {
   const isSheep = name.includes("sheep");
   const isRabbit = name.includes("rabbit");
   const isKid = name.includes("kid") || name.includes("young goat");
-  const animalClass = isSheep ? "sheep" : isRabbit ? "rabbit" : isBoer || name.includes("goat") ? "goat" : "pig";
+  const isGoat = name.includes("goat");
+  const animalName = isBoer ? "Boer Goat" : isKid ? "Goat Kid" : isSheep ? "Sheep" : isRabbit ? "Rabbit" : isGoat ? "Goat" : "Piglet";
+  const animalClass = isSheep ? "sheep" : isRabbit ? "rabbit" : isBoer || isGoat ? "goat" : "pig";
   const photo = isSheep
     ? "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Schof_11.jpg/960px-Schof_11.jpg"
     : isRabbit
@@ -166,7 +168,7 @@ function PlanCard({plan,onChoose}) {
         : isKid
           ? "https://www.kmetijazoran.insipia.si/Galerija/slike/galerija2/DSC_2390.jpg"
           : "https://vet.ed.ac.uk/sites/default/files/styles/convert_to_webp/public/thumbnails/image/piglet_0.jpg.webp?itok=M8v68ciC";
-  return <article className="plan"><div className={"animal "+animalClass}><img src={photo} alt={plan.name + " livestock"} loading="lazy" /><span className="returntag">+{Number(plan.return_percent).toFixed(1)}%</span></div><div className="planbody">
+  return <article className="plan"><div className={"animal "+animalClass}><img src={photo} alt={animalName} loading="lazy" /><span className="returntag">+{Number(plan.return_percent).toFixed(1)}%</span></div><div className="animal-label">{animalName}</div><div className="planbody">
     <div className="planname">{plan.name}</div><div className="muted">{plan.description}</div>
     <div className="planmeta"><span>Minimum investment</span><b>{money(plan.min_amount)}</b></div>
     <div className="planmeta"><span>Projected return</span><b className="red">{money(Number(plan.min_amount)*(1+Number(plan.return_percent)/100))}</b></div>
