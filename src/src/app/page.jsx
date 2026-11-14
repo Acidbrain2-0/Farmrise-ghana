@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const money = value => "GH₵" + Number(value || 0).toFixed(2);
 const networks = ["MTN MoMo", "Telecel Cash", "AT Money"];
@@ -20,6 +20,13 @@ export default function HomePage() {
   const [paymentReference, setPaymentReference] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const investFormRef = useRef(null);
+
+  useEffect(() => {
+    if (tab === "Invest" && selectedPlan) {
+      requestAnimationFrame(() => investFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+  }, [tab, selectedPlan]);
 
   async function refresh() {
     const auth = await fetch("/api/auth/me");
@@ -107,7 +114,7 @@ export default function HomePage() {
 
       {tab === "Invest" && <>
         <div className="eyebrow">GROW WITH FARMRISE</div><h1 className="heading">My Investments</h1><p className="muted">Choose a livestock plan or review your active investments.</p>
-        {selectedPlan && <div className="wallet"><b>{selectedPlan.name}</b><p className="muted">Minimum {money(selectedPlan.min_amount)} · {selectedPlan.duration_days} days · projected {selectedPlan.return_percent}%</p>
+        {selectedPlan && <div className="wallet invest-form" ref={investFormRef}><b>{selectedPlan.name}</b><p className="muted">Minimum {money(selectedPlan.min_amount)} · {selectedPlan.duration_days} days · projected {selectedPlan.return_percent}%</p>
           <div className="field"><label>INVESTMENT AMOUNT (GH₵)</label><input type="number" min={selectedPlan.min_amount} value={amount} onChange={e => setAmount(e.target.value)} /></div>
           <button className="btn" disabled={busy || !amount} onClick={() => submitAction({action:"invest",planId:selectedPlan.id,amount})}>Invest now</button>
           <button className="btn secondary" style={{width:"100%",marginTop:8}} onClick={() => setSelectedPlan(null)}>Cancel</button>
@@ -162,7 +169,7 @@ function PlanCard({plan,onChoose}) {
   const photo = isSheep
     ? "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Schof_11.jpg/960px-Schof_11.jpg"
     : isRabbit
-      ? "https://cdn.holidoit.com/media/experiences/1213/images/full/cena-tipica-in-agriturismo-fuori-bergamo-a-cenate-sopra-36890.webp"
+      ? "https://commons.wikimedia.org/wiki/Special:FilePath/Rabbit%20image.jpg?width=960"
       : isBoer
         ? "https://static.wixstatic.com/media/119b4e_87a627e4d583415eb4baa171892b7aa9~mv2.jpg/v1/fill/w_700%2Ch_574%2Cal_c%2Cq_85/119b4e_87a627e4d583415eb4baa171892b7aa9~mv2.jpg"
         : isKid
