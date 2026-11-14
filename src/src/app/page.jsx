@@ -152,9 +152,21 @@ export default function HomePage() {
 
 function PlanCard({plan,onChoose}) {
   const name = String(plan.name || "").toLowerCase();
-  const animal = name.includes("sheep") ? "🐑" : name.includes("goat") ? "🐐" : name.includes("rabbit") ? "🐇" : "🐖";
-  const animalClass = name.includes("sheep") ? "sheep" : name.includes("goat") ? "goat" : name.includes("rabbit") ? "rabbit" : "pig";
-  return <article className="plan"><div className={"animal "+animalClass}>{animal}<span className="returntag">+{Number(plan.return_percent).toFixed(1)}%</span></div><div className="planbody">
+  const isBoer = name.includes("boer");
+  const isSheep = name.includes("sheep");
+  const isRabbit = name.includes("rabbit");
+  const isKid = name.includes("kid") || name.includes("young goat");
+  const animalClass = isSheep ? "sheep" : isRabbit ? "rabbit" : isBoer || name.includes("goat") ? "goat" : "pig";
+  const photo = isSheep
+    ? "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Schof_11.jpg/960px-Schof_11.jpg"
+    : isRabbit
+      ? "https://cdn.holidoit.com/media/experiences/1213/images/full/cena-tipica-in-agriturismo-fuori-bergamo-a-cenate-sopra-36890.webp"
+      : isBoer
+        ? "https://static.wixstatic.com/media/119b4e_87a627e4d583415eb4baa171892b7aa9~mv2.jpg/v1/fill/w_700%2Ch_574%2Cal_c%2Cq_85/119b4e_87a627e4d583415eb4baa171892b7aa9~mv2.jpg"
+        : isKid
+          ? "https://www.kmetijazoran.insipia.si/Galerija/slike/galerija2/DSC_2390.jpg"
+          : "https://vet.ed.ac.uk/sites/default/files/styles/convert_to_webp/public/thumbnails/image/piglet_0.jpg.webp?itok=M8v68ciC";
+  return <article className="plan"><div className={"animal "+animalClass}><img src={photo} alt={plan.name + " livestock"} loading="lazy" /><span className="returntag">+{Number(plan.return_percent).toFixed(1)}%</span></div><div className="planbody">
     <div className="planname">{plan.name}</div><div className="muted">{plan.description}</div>
     <div className="planmeta"><span>Minimum investment</span><b>{money(plan.min_amount)}</b></div>
     <div className="planmeta"><span>Projected return</span><b className="red">{money(Number(plan.min_amount)*(1+Number(plan.return_percent)/100))}</b></div>
